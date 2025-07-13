@@ -1,0 +1,119 @@
+# -----------------------------
+# 🔧 GENERAL & OS-SPECIFIC
+# -----------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.lock
+*.log
+*.tmp
+
+# -----------------------------
+# 📦 PYTHON BACKEND
+# -----------------------------
+# Bytecode & Cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+Untitled*.ipynb
+
+# Secrets & Environment
+.env
+*.db
+
+# Logs & Temp
+logs/
+*.log
+test.py
+project_structure.txt
+
+# -----------------------------
+# 🤖 MODEL ARTIFACTS
+# -----------------------------
+*.pt
+*.bin
+*.ckpt
+*.onnx
+*.h5
+*.npz
+*.safetensors
+**/pytorch_model.bin
+**/model.safetensors
+**/tokenizer.*
+**/training_args.bin
+**/generation_config.json
+**/config.json
+**/checkpoint-*/
+
+# Transformers / Hugging Face caches
+.cache/
+checkpoints/
+hf_cache/
+transformers_cache/
+sentence_transformers_cache/
+
+# -----------------------------
+# 📂 DATA & UPLOADED FILES
+# -----------------------------
+*.pdf
+*.zip
+*.txt
+backend/uploads/
+backend/uploaded_pdfs/
+backend/temp_*.pdf
+
+# -----------------------------
+# ⚙️ FLUTTER / DART / ANDROID
+# -----------------------------
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.vscode/
+android/.gradle/
+android/**/build/
+android/local.properties
+android/key.properties
+*.jks
+
+# iOS / macOS / Linux / Windows Ephemeral
+**/Flutter/ephemeral/
+**/Pods/
+**/xcuserdata/
+**/.cxx/
+**/ios/.generated/
+**/macos/Flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/windows/flutter/ephemeral/
+
+# Generated Flutter plugin registrants
+**/generated_plugin_registrant.*
+**/GeneratedPluginRegistrant.*
+
+# Coverage
+coverage/
+
+# Assets
+flutter_*.png
+linked_*.ds
+unlinked.ds
+unlinked_spec.ds
