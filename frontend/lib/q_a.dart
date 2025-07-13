@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:lottie/lottie.dart';
-
+import 'config.dart'; 
 import 'user_home_page.dart';
 import 'summarization.dart';
 import 'classification.dart';
@@ -70,8 +70,8 @@ class _QAGeminiPageState extends State<QAGeminiPage> {
       chatHistory.add({'role': 'user', 'text': question});
       isLoading = true;
     });
-
     final uri = Uri.parse("http://127.0.0.1:8000/qa_api");
+    //final uri = Uri.parse("http://127.0.0.1:8000/qa_api");
     try {
       http.Response response;
       if (pdfFile != null) {

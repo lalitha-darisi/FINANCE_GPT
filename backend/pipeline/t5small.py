@@ -55,7 +55,7 @@ def ask_t5_with_context(question: str, context: str) -> str:
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 # ─── From PDF ───
-def run_qa(pdf_bytes: bytes, question: str) -> str:
+def run_qa_pdf_t5(pdf_bytes: bytes, question: str) -> str:
     try:
         text = extract_text_from_pdf_bytes(pdf_bytes)
         chunks = chunk_text(text)
@@ -67,7 +67,7 @@ def run_qa(pdf_bytes: bytes, question: str) -> str:
         return f"❌ Error during Q&A (PDF): {str(e)}"
 
 # ─── From Raw Text ───
-def run_qa_from_text(text: str, question: str) -> str:
+def run_qa_text_t5(text: str, question: str) -> str:
     try:
         chunks = chunk_text(text)
         db = create_faiss_index(chunks)

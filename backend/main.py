@@ -5,10 +5,11 @@ import os
 from typing import Optional
 import fitz
 import io
-
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Summarization and QA
 from pipeline.qa import run_qa_gemini, run_qa_from_text_gemini
-from pipeline.t5small import run_qa, run_qa_from_text
+from pipeline.t5small import run_qa_pdf_t5, run_qa_text_t5
 from pipeline.summarize import generate_summary
 from pipeline.summarize_t5 import summarize_pdf_sectionwise,summarize_text_sectionwise
 
@@ -101,13 +102,9 @@ async def qa_api(
         if model.lower() == "t5_small":
             if is_file_input:
                 pdf_bytes = await file.read()
-                doc = fitz.open("pdf", pdf_bytes)
-                content = ""
-                for page in doc:
-                    content += page.get_text()
-                response = run_qa(content, question)
+                response = run_qa_pdf_t5(pdf_bytes, question)
             else:
-                response = run_qa_from_text(text, question)
+                response = run_qa_text_t5(text, question)
 
         elif model.lower() == "gemini":
             if is_file_input:
@@ -115,6 +112,7 @@ async def qa_api(
                 response = run_qa_gemini(pdf_bytes, question)
             else:
                 response = run_qa_from_text_gemini(text, question)
+
         else:
             return JSONResponse(
                 status_code=400,

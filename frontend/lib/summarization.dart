@@ -7,7 +7,7 @@ import 'package:mime/mime.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:file_picker/file_picker.dart';
-
+import 'config.dart'; 
 import 'user_home_page.dart';
 import 'classification.dart';
 import 'q_a.dart';
@@ -84,6 +84,7 @@ class _SummarizationPageState extends State<SummarizationPage> {
       result = "";
     });
 
+    //final uri = Uri.parse("http://127.0.0.1:8000/summarize");
     final uri = Uri.parse("http://127.0.0.1:8000/summarize");
 
     try {

@@ -10,7 +10,7 @@ import 'user_home_page.dart';
 import 'summarization.dart';
 import 'compliance.dart';
 import 'q_a.dart';
-
+import 'config.dart'; 
 class ClassificationPage extends StatefulWidget {
   final String selectedModel;
   final String userId;
@@ -72,7 +72,9 @@ class _ClassificationPageState extends State<ClassificationPage> {
       multiPageResults = [];
     });
 
+    // final uri = Uri.parse("http://127.0.0.1:8000/classify");
     final uri = Uri.parse("http://127.0.0.1:8000/classify");
+
 
     try {
       http.Response response;
@@ -407,9 +409,10 @@ class _ClassificationPageState extends State<ClassificationPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Page \${page["page"]} - \${page["label"]}',
+                "Page ${page['page']} - ${page['label']}",
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF5D4037)),
               ),
+
               const Divider(),
               Expanded(
                 child: SingleChildScrollView(

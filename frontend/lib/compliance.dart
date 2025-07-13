@@ -14,7 +14,7 @@ import 'summarization.dart';
 import 'q_a.dart';
 import 'classification.dart';
 import 'compliance.dart';
-
+import 'config.dart';
 class ComplianceGeminiPage extends StatefulWidget {
   final File? pdfFile;
   final String selectedModel;
@@ -74,7 +74,8 @@ class _ComplianceGeminiPageState extends State<ComplianceGeminiPage> {
       structuredResult = [];
     });
 
-    final uri = Uri.parse("http://127.0.0.1:8000/compliance");
+    // final uri = Uri.parse("http://127.0.0.1:8000/compliance");
+    final uri = Uri.parse("$baseUrl/compliance");
 
     try {
       http.Response response;
