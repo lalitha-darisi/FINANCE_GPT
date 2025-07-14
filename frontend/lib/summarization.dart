@@ -78,68 +78,70 @@ class _SummarizationPageState extends State<SummarizationPage> {
     }
   }
 
-  Future<void> sendToBackend() async {
-    setState(() {
-      isLoading = true;
-      result = "";
-    });
-
-    //final uri = Uri.parse("http://127.0.0.1:8000/summarize");
-    final uri = Uri.parse("http://127.0.0.1:8000/summarize");
-
-    try {
-      http.Response response;
-
-      if (pdfFile != null) {
-        final request = http.MultipartRequest('POST', uri);
-        final mimeType = lookupMimeType(pdfFile!.path) ?? 'application/pdf';
-        final file = await http.MultipartFile.fromPath(
-          'file',
-          pdfFile!.path,
-          contentType: MediaType.parse(mimeType),
-        );
-        request.files.add(file);
-        request.fields['summary_type'] = summaryType;
-        request.fields['model'] = widget.selectedModel;
-
-        final streamedResponse = await request.send();
-        response = await http.Response.fromStream(streamedResponse);
-      } else if (_textController.text.trim().isNotEmpty) {
-        final request = http.MultipartRequest('POST', uri);
-        request.fields['text'] = _textController.text;
-        request.fields['summary_type'] = summaryType;
-        request.fields['model'] = widget.selectedModel;
-
-        final streamedResponse = await request.send();
-        response = await http.Response.fromStream(streamedResponse);
-      } else {
-        setState(() {
-          result = "❌ No valid input provided.";
-          isLoading = false;
-        });
-        return;
-      }
-
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-        setState(() {
-          result = jsonData['summary'];
-        });
-      } else {
-        setState(() {
-          result = "❌ Error ${response.statusCode}:\n${response.body}";
-        });
-      }
-    } catch (e) {
+    Future<void> sendToBackend() async {
       setState(() {
-        result = "🚨 Failed to connect to backend: $e";
+        isLoading = true;
+        result = "";
+      });
+
+      final uri = Uri.parse("http://127.0.0.1:8000/summarize");
+
+      try {
+        http.Response response;
+
+        if (pdfFile != null) {
+          final request = http.MultipartRequest('POST', uri);
+          final mimeType = lookupMimeType(pdfFile!.path) ?? 'application/pdf';
+          final file = await http.MultipartFile.fromPath(
+            'file',
+            pdfFile!.path,
+            contentType: MediaType.parse(mimeType),
+          );
+          request.files.add(file);
+          request.fields['summary_type'] = summaryType;
+          request.fields['model'] = widget.selectedModel;
+          request.fields['user_id'] = widget.userId; // ✅ add this
+
+          final streamedResponse = await request.send();
+          response = await http.Response.fromStream(streamedResponse);
+        } else if (_textController.text.trim().isNotEmpty) {
+          final request = http.MultipartRequest('POST', uri);
+          request.fields['text'] = _textController.text;
+          request.fields['summary_type'] = summaryType;
+          request.fields['model'] = widget.selectedModel;
+          request.fields['user_id'] = widget.userId; // ✅ add this
+
+          final streamedResponse = await request.send();
+          response = await http.Response.fromStream(streamedResponse);
+        } else {
+          setState(() {
+            result = "❌ No valid input provided.";
+            isLoading = false;
+          });
+          return;
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = jsonDecode(response.body);
+          setState(() {
+            result = jsonData['summary'];
+          });
+        } else {
+          setState(() {
+            result = "❌ Error ${response.statusCode}:\n${response.body}";
+          });
+        }
+      } catch (e) {
+        setState(() {
+          result = "🚨 Failed to connect to backend: $e";
+        });
+      }
+
+      setState(() {
+        isLoading = false;
       });
     }
 
-    setState(() {
-      isLoading = false;
-    });
-  }
 
   Future<void> downloadSummary() async {
     final pdf = pw.Document();

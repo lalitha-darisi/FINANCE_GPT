@@ -8,6 +8,8 @@ import numpy as np
 import google.generativeai as genai
 from collections import deque
 from sklearn.metrics.pairwise import cosine_similarity
+from datetime import datetime
+from models.db import qa_collection  # ✅ MongoDB
 
 # ---------- Setup ----------
 load_dotenv()
@@ -91,25 +93,52 @@ AI:"""
         answer = f"[❌ Gemini Error] {str(e)}"
 
     memory.append((query, answer))
-    return answer
-
+    return answer, retrieved  # ✅ also return chunks used
 
 # ---------- Final Exported Functions ----------
 
-def run_qa_gemini(pdf_bytes: bytes, question: str) -> str:
+async def run_qa_gemini(pdf_bytes: bytes, question: str, user_id: str = None) -> str:
     try:
         pdf_file_like = io.BytesIO(pdf_bytes)
-        text = extract_text_from_pdf_bytes(pdf_file_like)  # ✅ fixed
+        text = extract_text_from_pdf_bytes(pdf_file_like)
         chunks = chunk_text(text)
         index, chunk_store = create_faiss_index(chunks)
-        return ask_question_with_rag(question, index, chunk_store)
+
+        answer, context_used = ask_question_with_rag(question, index, chunk_store)
+
+        if user_id:
+            await qa_collection.insert_one({
+                "user_id": user_id,
+                "timestamp": datetime.utcnow(),
+                "input_type": "pdf",
+                "question": question,
+                "context_used": context_used,
+                "answer": answer
+            })
+
+        return answer
+
     except Exception as e:
         return f"[❌ QA Error]: {str(e)}"
 
-def run_qa_from_text_gemini(context: str, question: str) -> str:
+async def run_qa_from_text_gemini(context: str, question: str, user_id: str = None) -> str:
     try:
         chunks = chunk_text(context)
         index, chunk_store = create_faiss_index(chunks)
-        return ask_question_with_rag(question, index, chunk_store)
+
+        answer, context_used = ask_question_with_rag(question, index, chunk_store)
+
+        if user_id:
+            await qa_collection.insert_one({
+                "user_id": user_id,
+                "timestamp": datetime.utcnow(),
+                "input_type": "text",
+                "question": question,
+                "context_used": context_used,
+                "answer": answer
+            })
+
+        return answer
+
     except Exception as e:
         return f"[❌ QA (text) Error]: {str(e)}"

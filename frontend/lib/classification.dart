@@ -82,6 +82,7 @@ class _ClassificationPageState extends State<ClassificationPage> {
       if (pdfFile != null) {
         final request = http.MultipartRequest('POST', uri);
         request.fields['model'] = widget.selectedModel;
+        request.fields['user_id'] = widget.userId;
         request.files.add(await http.MultipartFile.fromPath('file', pdfFile!.path));
         final streamedResponse = await request.send();
         response = await http.Response.fromStream(streamedResponse);
@@ -89,7 +90,7 @@ class _ClassificationPageState extends State<ClassificationPage> {
         response = await http.post(
           uri,
           headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: {'text': _textController.text, 'model': widget.selectedModel},
+          body: {'text': _textController.text, 'model': widget.selectedModel,'user_id': widget.userId},
         );
       } else {
         setState(() {

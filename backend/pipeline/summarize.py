@@ -9,7 +9,8 @@ from sentence_transformers import SentenceTransformer
 import google.generativeai as genai
 from dotenv import load_dotenv
 from pathlib import Path
-
+from models.db import summarization_collection
+from datetime import datetime
 # === Load API Key ===
 backend_dir = Path(__file__).resolve().parent.parent
 env_path = backend_dir / ".env"
@@ -159,7 +160,7 @@ def split_prompt(text, max_len=12000):
     return [text[i:i + max_len] for i in range(0, len(text), max_len)]
 
 # === Summarization logic ===
-def generate_summary(input_data, summary_type="detailed", model="gemini", is_text=False):
+async def generate_summary(input_data, summary_type="detailed", model="gemini", is_text=False,user_id: str=None):
     if is_text:
         full_text = clean_text(input_data)
     else:
@@ -186,7 +187,7 @@ def generate_summary(input_data, summary_type="detailed", model="gemini", is_tex
     result = ""
     if model == "gemini":
         for part in prompt_parts:
-            response = gemini_model.generate_content(
+            response = await gemini_model.generate_content_async(
                 part,
                 generation_config=genai.types.GenerationConfig(temperature=0.2, max_output_tokens=4096)
             )
@@ -201,5 +202,22 @@ def generate_summary(input_data, summary_type="detailed", model="gemini", is_tex
 
     if not result.strip():
         return "⚠️ No summary generated."
+    print("📦 Saving summary for user:", user_id)
+
+    # ✅ Store in MongoDB if user_id is provided
+    if user_id:
+        input_type = "text" if is_text else "pdf"
+        input_excerpt = input_data[:300] if is_text else full_text[:300]
+
+        await summarization_collection.insert_one({
+            "user_id": user_id,
+            "model": model,
+            "summary_type": summary_type,
+            "input_type": input_type,
+            "input_excerpt": input_excerpt,
+            "timestamp": datetime.utcnow(),
+            "summary": result.strip()
+        })
 
     return result.strip()
+

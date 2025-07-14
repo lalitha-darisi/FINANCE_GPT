@@ -6,7 +6,8 @@ from typing import List
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 from sentence_transformers import SentenceTransformer
 import PyPDF2
-
+from models.db import summarization_collection
+from datetime import datetime
 # === Load models ===
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 tokenizer = T5Tokenizer.from_pretrained("t5-base")
@@ -72,7 +73,7 @@ def structured_summary_with_sections(chunks: List[str], queries: List[str]) -> s
     return full_summary
 
 # === Main pipeline function ===
-def summarize_pdf_sectionwise(pdf_path: str) -> str:
+async def summarize_pdf_sectionwise(pdf_path: str, user_id: str = None, model: str = "t5") -> str:
     full_text = extract_text_from_pdf(pdf_path)
     chunks = split_text(full_text)
 
@@ -83,9 +84,22 @@ def summarize_pdf_sectionwise(pdf_path: str) -> str:
         "summarize the consolidated financial statements and auditor report"
     ]
 
-    return structured_summary_with_sections(chunks, queries)
+    summary = structured_summary_with_sections(chunks, queries)
 
-def summarize_text_sectionwise(text: str) -> str:
+    # ✅ Store in MongoDB
+    if user_id:
+        await summarization_collection.insert_one({
+            "user_id": user_id,
+            "model": model,
+            "input_type": "pdf",
+            "input_excerpt": full_text[:300],
+            "timestamp": datetime.utcnow(),
+            "summary": summary
+        })
+
+    return summary
+
+async def summarize_text_sectionwise(text: str, user_id: str = None, model: str = "t5") -> str:
     print("🧩 Splitting input text into chunks...")
     chunks = split_text(text)
 
@@ -98,5 +112,18 @@ def summarize_text_sectionwise(text: str) -> str:
         "summarize the consolidated financial statements and auditor report"
     ]
 
-    structured_summary = structured_summary_with_sections(chunks, queries)
-    return structured_summary
+    summary = structured_summary_with_sections(chunks, queries)
+    print("📦 Saving summary for user:", user_id)
+
+    # ✅ Store in MongoDB
+    if user_id:
+        await summarization_collection.insert_one({
+            "user_id": user_id,
+            "model": model,
+            "input_type": "text",
+            "input_excerpt": text[:300],
+            "timestamp": datetime.utcnow(),
+            "summary": summary
+        })
+
+    return summary

@@ -4,6 +4,8 @@ import pytesseract
 from pdf2image import convert_from_bytes
 import google.generativeai as genai
 from PIL import Image
+from models.db import classification_collection  # ✅ Add this
+from datetime import datetime
 
 # === Configuration ===
 POPPLER_PATH = r"C:\Users\LALITHA\Downloads\Release-24.08.0-0\poppler-24.08.0\Library\bin"
@@ -62,7 +64,7 @@ Page Text:
         return fallback_label(text)
 
 # === Full PDF Classifier ===
-def classify_pdf_bytes(file_bytes: bytes):
+async def classify_pdf_bytes(file_bytes: bytes, user_id: str = None):
     try:
         images = convert_from_bytes(file_bytes, poppler_path=POPPLER_PATH)
     except Exception as e:
@@ -72,8 +74,7 @@ def classify_pdf_bytes(file_bytes: bytes):
     results = []
     for i, img in enumerate(images):
         try:
-            custom_config = r'--oem 3 --psm 6'
-            text = pytesseract.image_to_string(img, config=custom_config)
+            text = pytesseract.image_to_string(img, config=r'--oem 3 --psm 6')
             print(f"[PAGE {i+1} OCR]:", text[:300])
 
             if not text.strip():
@@ -83,11 +84,24 @@ def classify_pdf_bytes(file_bytes: bytes):
             label = classify_text_content(text)
             print(f"[PAGE {i+1}] Label: {label}")
 
-            results.append({
+            result = {
                 "page": i + 1,
                 "label": label,
                 "text_preview": text.strip()[:300]
-            })
+            }
+
+            # ✅ Store in MongoDB if user_id is given
+            if user_id:
+                await classification_collection.insert_one({
+                    "user_id": user_id,
+                    "timestamp": datetime.utcnow(),
+                    "page": result["page"],
+                    "label": result["label"],
+                    "text_preview": result["text_preview"]
+                })
+
+            results.append(result)
+
         except Exception as page_err:
             print(f"[OCR Error on Page {i+1}]: {page_err}")
             results.append({

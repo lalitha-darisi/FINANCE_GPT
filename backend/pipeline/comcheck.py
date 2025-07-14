@@ -81,7 +81,7 @@ def gemini_classify(claim: str, policies: List[dict]) -> str:
 
 # 💡 Final callable for FastAPI
 
-def run_compliance_check_gemini(content: Union[bytes, str], user_id: str, is_raw_text: bool = False):
+async def run_compliance_check_gemini(content: Union[bytes, str], user_id: str, is_raw_text: bool = False):
     try:
         # Step 1: Get plain text
         text = content if is_raw_text else extract_text_from_bytes(content)
@@ -113,10 +113,13 @@ def run_compliance_check_gemini(content: Union[bytes, str], user_id: str, is_raw
                 "matched_policies": [p["category"] for p in top_pols]
             }
 
-            compliance_collection.insert_one({
+            await compliance_collection.insert_one({
                 "user_id": user_id,
                 "timestamp": datetime.utcnow(),
-                **result
+                "claim_text": result["claim"],
+                "compliant": result["classification"].lower() == "compliant",
+                "reasoning": result["reasoning"],
+                "matched_policies": result["matched_policies"]
             })
 
             results.append(result)

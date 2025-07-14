@@ -5,6 +5,8 @@ import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from typing import Optional
 import re
+from models.db import classification_collection  # ✅ NEW: MongoDB collection
+from datetime import datetime
 
 # === Model setup ===
 MODEL_PATH = "document_type_classifier"
@@ -40,29 +42,59 @@ def classify_text_with_model(text):
         return "Unclassified (Error)"
 
 # ✅ Function to be called by main.py
-async def classify_file_from_train_model(text: Optional[str] = None, file: Optional[UploadFile] = None):
+async def classify_file_from_train_model(
+    text: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+    user_id: Optional[str] = Form(None)
+):
     if file:
         try:
             contents = await file.read()
             images = convert_from_bytes(contents, poppler_path=POPPLER_PATH)
             results = []
+
             for i, img in enumerate(images):
                 text = pytesseract.image_to_string(img)
                 label = classify_text_with_model(text) if text.strip() else "Unclassified (No text)"
                 masked = mask_pii(text.strip())
+
+                # ✅ Store in MongoDB
+                await classification_collection.insert_one({
+                    "user_id": user_id or "unknown",
+                    "timestamp": datetime.utcnow(),
+                    "input_type": "pdf",
+                    "page": i + 1,
+                    "label": label,
+                    "ocr_text": text.strip(),
+                    "masked_text": masked
+                })
+
                 results.append({
                     "page": i + 1,
                     "label": label,
                     "ocr_text": text.strip(),
                     "masked_text": masked
                 })
+
             return {"type": "pdf", "results": results}
+
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
 
     elif text:
         label = classify_text_with_model(text)
         masked = mask_pii(text)
+
+        # ✅ Store in MongoDB
+        await classification_collection.insert_one({
+            "user_id": user_id or "unknown",
+            "timestamp": datetime.utcnow(),
+            "input_type": "text",
+            "label": label,
+            "ocr_text": text,
+            "masked_text": masked
+        })
+
         return {"type": "text", "label": label, "input": text, "masked": masked}
 
     else:

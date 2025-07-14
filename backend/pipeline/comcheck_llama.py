@@ -74,7 +74,7 @@ def llama_classify(claim: str) -> str:
     return tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
 
 # === Main compliance check function ===
-def run_compliance_check_llama(content: Union[bytes, str], user_id: str, is_raw_text: bool = False):
+async def run_compliance_check_llama(content: Union[bytes, str], user_id: str, is_raw_text: bool = False):
     try:
         text = content if is_raw_text else extract_text_from_bytes(content)
         claims = split_claims(text)
@@ -98,11 +98,15 @@ def run_compliance_check_llama(content: Union[bytes, str], user_id: str, is_raw_
             }
 
             # Store in DB
-            compliance_collection.insert_one({
+            await compliance_collection.insert_one({
                 "user_id": user_id,
                 "timestamp": datetime.utcnow(),
-                **result
+                "claim_text": result["claim"],
+                "compliant": result["classification"].lower() == "compliant",
+                "reasoning": result["reasoning"],
+                "matched_policies": result["matched_policies"]
             })
+
 
             results.append(result)
 

@@ -1,12 +1,12 @@
-// user_home_page.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'summarization.dart';
-//import 'summarization_t5.dart';
 import 'q_a.dart';
 import 'classification.dart';
 import 'compliance.dart';
+import 'login_signup_page.dart';
+import 'history_page.dart';
 
 class UserHomePage extends StatefulWidget {
   final String userId;
@@ -32,13 +32,45 @@ class _UserHomePageState extends State<UserHomePage> {
     return Scaffold(
       body: Stack(
         children: [
-    // 🌄 Background image
-    Positioned.fill(
-      child: Image.asset(
-        'assets/bg2.jpg', // ✅ Replace with your actual image path
-        fit: BoxFit.cover,
-      ),
-    ),
+          Positioned.fill(
+            child: Image.asset(
+              'assets/bg2.jpg',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned(
+            top: 40,
+            right: 20,
+            child: PopupMenuButton<String>(
+              offset: const Offset(0, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              icon: const CircleAvatar(
+                backgroundImage: AssetImage('assets/user_avatar.jpeg'),
+                radius: 20,
+              ),
+              onSelected: (value) {
+                if (value == 'history') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HistoryPage(userId: widget.userId), // ✅ simplified
+                    ),
+                  );
+                } else if (value == 'logout') {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginSignUpPage()),
+                  );
+                }
+              },
+
+              itemBuilder: (context) => const [
+                PopupMenuItem(value: 'history', child: Text('View History')),
+                PopupMenuItem(value: 'logout', child: Text('Sign Out')),
+              ],
+
+            ),
+          ),
           Center(
             child: SingleChildScrollView(
               child: Column(
@@ -46,20 +78,12 @@ class _UserHomePageState extends State<UserHomePage> {
                   const SizedBox(height: 60),
                   const Text(
                     'Welcome to your Document Hub!',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF4E342E),
-                    ),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF4E342E)),
                   ),
                   const SizedBox(height: 30),
                   const Text(
                     'Select a Use Case:',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF4E342E),
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Color(0xFF4E342E)),
                   ),
                   const SizedBox(height: 20),
                   Row(
@@ -153,12 +177,11 @@ class _UserHomePageState extends State<UserHomePage> {
     String? selectedModel = await _selectModel(context, label);
     if (selectedModel == null) return;
 
-        if (label == 'Summarization') {
+    if (label == 'Summarization') {
       Navigator.push(context, MaterialPageRoute(
         builder: (context) => SummarizationPage(selectedModel: selectedModel, userId: widget.userId),
       ));
-    }
-      else if (label == 'Q&A') {
+    } else if (label == 'Q&A') {
       Navigator.push(context, MaterialPageRoute(
         builder: (context) => QAGeminiPage(selectedModel: selectedModel, userId: widget.userId),
       ));
@@ -278,104 +301,105 @@ class _UserHomePageState extends State<UserHomePage> {
   );
 }
   Widget _radioOption(
-  String title,
-  String value,
-  String selectedModel,
-  void Function(String?) onChanged,
-) {
-  return RadioListTile<String>(
-    activeColor: const Color.fromARGB(255, 97, 75, 53),
-    title: Text(title),
-    value: value,
-    groupValue: selectedModel,
-    onChanged: onChanged, // passes nullable String
-  );
-}
-  void _showModelInfo(String model) {
-  String title;
-  String info;
+        
+      String title,
+      String value,
+      String selectedModel,
+      void Function(String?) onChanged,
+    ) {
+      return RadioListTile<String>(
+        activeColor: const Color.fromARGB(255, 97, 75, 53),
+        title: Text(title),
+        value: value,
+        groupValue: selectedModel,
+        onChanged: onChanged, // passes nullable String
+      );
+    }
+      void _showModelInfo(String model) {
+      String title;
+      String info;
 
-  switch (model) {
-    case 'gemini':
-      title = '🌟 Gemini 1.5 Flash';
-      info = '''
-- Developed by Google DeepMind.
-- Multimodal: Works with text, code, images, and more.
-- Extremely fast and optimized for real-time applications.
-- Large context window: Can understand long documents.
-- Ideal for summarization, Q&A, chatbots, and RAG tasks.
-''';
-      break;
+          switch (model) {
+            case 'gemini':
+              title = '🌟 Gemini 1.5 Flash';
+              info = '''
+        - Developed by Google DeepMind.
+        - Multimodal: Works with text, code, images, and more.
+        - Extremely fast and optimized for real-time applications.
+        - Large context window: Can understand long documents.
+        - Ideal for summarization, Q&A, chatbots, and RAG tasks.
+        ''';
+              break;
 
-    case 't5':
-      title = '🧠 T5 Base Model';
-      info = '''
-- Developed by Google.
-- Text-to-Text architecture: Converts all NLP tasks to text form.
-- Good accuracy for summarization, classification, Q&A.
-- Pretrained on C4 dataset (Colossal Clean Crawled Corpus).
-- Offline & open-source compatible.
-''';
-      break;
+            case 't5':
+              title = '🧠 T5 Base Model';
+              info = '''
+        - Developed by Google.
+        - Text-to-Text architecture: Converts all NLP tasks to text form.
+        - Good accuracy for summarization, classification, Q&A.
+        - Pretrained on C4 dataset (Colossal Clean Crawled Corpus).
+        - Offline & open-source compatible.
+        ''';
+              break;
 
-    case 't5_small':
-      title = '📄 T5 Small Model';
-      info = '''
-- Light version of T5 (~60M parameters).
-- Fast and efficient, good for small Q&A tasks.
-- Less accurate than base but resource-friendly.
-- Suitable for edge and mobile deployments.
-''';
-      break;
+            case 't5_small':
+              title = '📄 T5 Small Model';
+              info = '''
+        - Light version of T5 (~60M parameters).
+        - Fast and efficient, good for small Q&A tasks.
+        - Less accurate than base but resource-friendly.
+        - Suitable for edge and mobile deployments.
+        ''';
+              break;
 
-    case 'distilbert':
-      title = '📘 DistilBERT';
-      info = '''
-- A smaller, faster version of BERT.
-- Retains 97% performance of BERT with 60% fewer parameters.
-- Well-suited for classification and sentiment analysis.
-- Very efficient and good for real-time prediction.
-''';
-      break;
+            case 'distilbert':
+              title = '📘 DistilBERT';
+              info = '''
+        - A smaller, faster version of BERT.
+        - Retains 97% performance of BERT with 60% fewer parameters.
+        - Well-suited for classification and sentiment analysis.
+        - Very efficient and good for real-time prediction.
+        ''';
+              break;
 
-    case 'tiny_lama':
-      title = '🦙 Tiny LLaMA';
-      info = '''
-- A miniature version of Meta’s LLaMA model.
-- Finetuned for compliance, safety, and policy checks.
-- Lightweight: Suitable for deployment on smaller machines.
-- Strong at understanding structured documents.
-''';
-      break;
+            case 'tiny_lama':
+              title = '🦙 Tiny LLaMA';
+              info = '''
+        - A miniature version of Meta’s LLaMA model.
+        - Finetuned for compliance, safety, and policy checks.
+        - Lightweight: Suitable for deployment on smaller machines.
+        - Strong at understanding structured documents.
+        ''';
+              break;
 
-    default:
-      title = 'Unknown Model';
-      info = 'No information available.';
-  }
+            default:
+              title = 'Unknown Model';
+              info = 'No information available.';
+          }
 
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: const Color(0xFFFFF8F2),
-      title: Text(title),
-      content: SingleChildScrollView(child: Text(info)),
-      actions: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextButton.icon(
-              icon: const Icon(Icons.arrow_back, color: Color.fromARGB(255, 97, 75, 53)),
-              label: const Text('Back', style: TextStyle(color: Color.fromARGB(255, 97, 75, 53))),
-              onPressed: () {
-                Navigator.pop(context);
-                _showRoboModelInfo(); // reopen model selection
-              },
-            ),
-            TextButton(
-              style: TextButton.styleFrom(foregroundColor: const Color.fromARGB(255, 97, 75, 53)),
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cool!'),
-            ),
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFFFFF8F2),
+          title: Text(title),
+          content: SingleChildScrollView(child: Text(info)),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton.icon(
+                  icon: const Icon(Icons.arrow_back, color: Color.fromARGB(255, 97, 75, 53)),
+                  label: const Text('Back', style: TextStyle(color: Color.fromARGB(255, 97, 75, 53))),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showRoboModelInfo(); // reopen model selection
+                  },
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(foregroundColor: const Color.fromARGB(255, 97, 75, 53)),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cool!'),
+                ),
           ],
         )
       ],
@@ -383,3 +407,4 @@ class _UserHomePageState extends State<UserHomePage> {
   );
 }
 }
+

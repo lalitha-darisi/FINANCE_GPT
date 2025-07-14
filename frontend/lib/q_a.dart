@@ -82,13 +82,16 @@ class _QAGeminiPageState extends State<QAGeminiPage> {
         request.files.add(file);
         request.fields['question'] = question;
         request.fields['model'] = selectedModel;
+        request.fields['user_id'] = widget.userId;
         final streamed = await request.send();
         response = await http.Response.fromStream(streamed);
       } else if (_textInputController.text.trim().isNotEmpty) {
-        final request = http.MultipartRequest('POST', uri)
-          ..fields['text'] = _textInputController.text
-          ..fields['question'] = question
-          ..fields['model'] = selectedModel;
+        final request = http.MultipartRequest('POST', uri);
+        request.fields['text'] = _textInputController.text;
+        request.fields['question'] = question;
+        request.fields['model'] = selectedModel;
+        request.fields['user_id'] = widget.userId;
+
         final streamed = await request.send();
         response = await http.Response.fromStream(streamed);
       } else {

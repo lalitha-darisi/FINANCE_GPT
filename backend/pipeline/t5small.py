@@ -7,10 +7,13 @@ from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from sentence_transformers import SentenceTransformer
 from transformers import T5ForConditionalGeneration, T5Tokenizer
+from datetime import datetime
 import torch
 import faiss
 
-# ─── Load .env (Optional, in case you store model path or debug flag) ───
+from models.db import qa_collection  # ✅ MongoDB collection
+
+# ─── Load .env ───
 env_path = Path(__file__).resolve().parents[1] / ".env"
 load_dotenv(dotenv_path=env_path)
 
@@ -45,7 +48,7 @@ def create_faiss_index(chunks):
 def retrieve_top_chunks(question: str, db, top_k=3):
     q_vec = embedder.encode([question])
     _, I = db["index"].search(q_vec, top_k)
-    return "\n".join([db["chunks"][i] for i in I[0]])
+    return [db["chunks"][i] for i in I[0]]
 
 # ─── T5-based Answer Generation ───
 def ask_t5_with_context(question: str, context: str) -> str:
@@ -55,24 +58,50 @@ def ask_t5_with_context(question: str, context: str) -> str:
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 # ─── From PDF ───
-def run_qa_pdf_t5(pdf_bytes: bytes, question: str) -> str:
+async def run_qa_pdf_t5(pdf_bytes: bytes, question: str, user_id: str = None) -> str:
     try:
         text = extract_text_from_pdf_bytes(pdf_bytes)
         chunks = chunk_text(text)
         db = create_faiss_index(chunks)
-        context = retrieve_top_chunks(question, db)
+        top_chunks = retrieve_top_chunks(question, db)
+        context = "\n".join(top_chunks)
         answer = ask_t5_with_context(question, context)
+
+        if user_id:
+            await qa_collection.insert_one({
+                "user_id": user_id,
+                "timestamp": datetime.utcnow(),
+                "input_type": "pdf",
+                "question": question,
+                "context_used": top_chunks,
+                "answer": answer
+            })
+
         return answer
+
     except Exception as e:
         return f"❌ Error during Q&A (PDF): {str(e)}"
 
 # ─── From Raw Text ───
-def run_qa_text_t5(text: str, question: str) -> str:
+async def run_qa_text_t5(text: str, question: str, user_id: str = None) -> str:
     try:
         chunks = chunk_text(text)
         db = create_faiss_index(chunks)
-        context = retrieve_top_chunks(question, db)
+        top_chunks = retrieve_top_chunks(question, db)
+        context = "\n".join(top_chunks)
         answer = ask_t5_with_context(question, context)
+
+        if user_id:
+            await qa_collection.insert_one({
+                "user_id": user_id,
+                "timestamp": datetime.utcnow(),
+                "input_type": "text",
+                "question": question,
+                "context_used": top_chunks,
+                "answer": answer
+            })
+
         return answer
+
     except Exception as e:
         return f"❌ Error during Q&A (Text): {str(e)}"

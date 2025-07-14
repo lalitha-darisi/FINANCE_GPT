@@ -48,7 +48,8 @@ async def summarize(
     file: UploadFile = File(None),
     summary_type: str = Form("detailed"),
     model: str = Form("gemini"),
-    text: str = Form(None)
+    text: str = Form(None),
+    user_id: str = Form(None)
 ):
     print(f"📌 Summarize Request | Type: {summary_type} | Model: {model}")
 
@@ -59,9 +60,10 @@ async def summarize(
             f.write(content)
 
         if model == "gemini":
-            summary = generate_summary(file_path, summary_type, model=model, is_text=False)
+            summary = await generate_summary(file_path, summary_type, model=model, is_text=False,user_id=user_id)
         elif model == "t5":
-            summary = summarize_pdf_sectionwise(file_path)
+            summary = await summarize_pdf_sectionwise(file_path, user_id=user_id, model=model)
+
         else:
             return {"error": "❌ Unsupported summarization model."}
 
@@ -69,9 +71,10 @@ async def summarize(
 
     elif text:
         if model == "gemini":
-            summary = generate_summary(text, summary_type, model=model, is_text=True)
+            summary = await generate_summary(text, summary_type, model=model, is_text=True,user_id=user_id)
         elif model == "t5":
-            summary = summarize_text_sectionwise(text)
+            summary = await summarize_text_sectionwise(text, user_id=user_id, model=model)
+
         else:
             return {"error": "❌ Unsupported summarization model."}
 
@@ -86,7 +89,8 @@ async def qa_api(
     question: str = Form(...),
     model: str = Form("gemini"),
     text: Optional[str] = Form(None),
-    file: Optional[UploadFile] = File(None)
+    file: Optional[UploadFile] = File(None),
+    user_id: Optional[str] = Form(None) 
 ):
     try:
         print(f"🤖 Q&A Request | Model: {model} | Question: {question}")
@@ -102,16 +106,16 @@ async def qa_api(
         if model.lower() == "t5_small":
             if is_file_input:
                 pdf_bytes = await file.read()
-                response = run_qa_pdf_t5(pdf_bytes, question)
+                response = await run_qa_pdf_t5(pdf_bytes, question,user_id=user_id)
             else:
-                response = run_qa_text_t5(text, question)
+                response = await run_qa_text_t5(text, question,user_id=user_id)
 
         elif model.lower() == "gemini":
             if is_file_input:
                 pdf_bytes = await file.read()
-                response = run_qa_gemini(pdf_bytes, question)
+                response = await run_qa_gemini(pdf_bytes, question,user_id=user_id)
             else:
-                response = run_qa_from_text_gemini(text, question)
+                response = await run_qa_from_text_gemini(text, question,user_id=user_id)
 
         else:
             return JSONResponse(
@@ -132,13 +136,14 @@ async def qa_api(
 async def classify(
     file: Optional[UploadFile] = File(None),
     text: Optional[str] = Form(None),
-    model: str = Form("bert")
+    model: str = Form("bert"),
+    user_id: str = Form(None)
 ):
     print(f"📄 Classify | Model: {model}")
 
     try:
         if model in ["bert", "distilbert"]:
-            result = await classify_file_from_train_model(text=text, file=file)
+            result = await classify_file_from_train_model(text=text, file=file,user_id=user_id)
             if result.get("type") == "pdf":
                 results = [{
                     "page": page["page"],
@@ -203,9 +208,9 @@ async def compliance_api(
     print("📄 Content:\n", content[:500])
 
     if model == "gemini":
-        result = run_compliance_check_gemini(content, is_raw_text=is_raw_text, user_id=user_id)
+        result = await run_compliance_check_gemini(content, is_raw_text=is_raw_text, user_id=user_id)
     elif model in ["tinyllama", "tiny_lama"]:
-        result = run_compliance_check_llama(content, is_raw_text=is_raw_text, user_id=user_id)
+        result = await run_compliance_check_llama(content, is_raw_text=is_raw_text, user_id=user_id)
     else:
         return {"results": [dict(
             claim="Unknown",
