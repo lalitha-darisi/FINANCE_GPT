@@ -1,5 +1,5 @@
 # backend/usecases/qa.py
-
+# extract with gemini
 import os
 from io import BytesIO
 from pathlib import Path
