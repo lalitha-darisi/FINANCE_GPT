@@ -44,31 +44,59 @@ class _UserHomePageState extends State<UserHomePage> {
             child: PopupMenuButton<String>(
               offset: const Offset(0, 50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              icon: const CircleAvatar(
-                backgroundImage: AssetImage('assets/user_avatar.jpeg'),
-                radius: 20,
+              color: Colors.brown.shade50,
+              icon: Row(
+                children: const [
+                  Icon(Icons.account_circle, size: 30, color: Color(0xFF4E342E)),
+                  Icon(Icons.arrow_drop_down, color: Color(0xFF4E342E)),
+                ],
               ),
               onSelected: (value) {
                 if (value == 'history') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HistoryPage(userId: widget.userId), // ✅ simplified
-                    ),
-                  );
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => HistoryPage(userId: widget.userId),
+                  ));
                 } else if (value == 'logout') {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginSignUpPage()),
+                    MaterialPageRoute(builder: (context) => const LoginSignUpPage()),
                   );
                 }
               },
-
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'history', child: Text('View History')),
-                PopupMenuItem(value: 'logout', child: Text('Sign Out')),
+              itemBuilder: (context) => [
+                const PopupMenuItem<String>(
+                  value: 'username',
+                  enabled: false,
+                  child: Row(
+                    children: [
+                      Icon(Icons.person, color: Color(0xFF4E342E)),
+                      SizedBox(width: 8),
+                      Text('Welcome!', style: TextStyle(color: Color(0xFF4E342E))),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem<String>(
+                  value: 'history',
+                  child: Row(
+                    children: [
+                      Icon(Icons.history, color: Color(0xFF4E342E)),
+                      SizedBox(width: 8),
+                      Text('View History', style: TextStyle(color: Color(0xFF4E342E))),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: Color(0xFF4E342E)),
+                      SizedBox(width: 8),
+                      Text('Sign Out', style: TextStyle(color: Color(0xFF4E342E))),
+                    ],
+                  ),
+                ),
               ],
-
             ),
           ),
           Center(
@@ -121,14 +149,14 @@ class _UserHomePageState extends State<UserHomePage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 3))],
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 6)],
                     ),
                     width: 200,
-                    child: const Text('Hi! Tap me to know about the models.', style: TextStyle(fontSize: 13, color: Colors.black87)),
+                    child: const Text('Hi! Tap me to know about the models.', style: TextStyle(fontSize: 13)),
                   ),
                 GestureDetector(
                   onTap: _showRoboModelInfo,
-                  child: Lottie.asset('assets/robo2.json', width: 80, height: 80, repeat: true),
+                  child: Lottie.asset('assets/robo2.json', width: 80, height: 80),
                 ),
               ],
             ),
@@ -150,7 +178,6 @@ class _UserHomePageState extends State<UserHomePage> {
             color: const Color.fromARGB(255, 78, 52, 46).withOpacity(0.75),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.5),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4))],
           ),
           child: InkWell(
             onTap: () => _onUseCaseTap(context, label),
@@ -211,12 +238,9 @@ class _UserHomePageState extends State<UserHomePage> {
     } else if (label == 'Classification') {
       secondModel = 'distilbert';
       secondModelName = 'DistilBERT';
-    } else if (label == 'Compliance') {
+    } else {
       secondModel = 'tiny_lama';
       secondModelName = 'Tiny LLaMA';
-    } else {
-      secondModel = 't5';
-      secondModelName = 'T5 Model';
     }
 
     return showModalBottomSheet<String>(
@@ -231,14 +255,12 @@ class _UserHomePageState extends State<UserHomePage> {
               const Text('Select a Model', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               RadioListTile(
-                activeColor: const Color.fromARGB(255, 78, 52, 46),
-                title: Row(children: const [Icon(Icons.stars, color: Color.fromARGB(255, 78, 52, 46)), SizedBox(width: 8), Text('Gemini AI')]),
+                title: Row(children: const [Icon(Icons.stars), SizedBox(width: 8), Text('Gemini AI')]),
                 value: 'gemini',
                 groupValue: selectedModel,
                 onChanged: (val) => setState(() => selectedModel = val!),
               ),
               RadioListTile(
-                activeColor: const Color.fromARGB(255, 78, 52, 46),
                 title: Row(children: [secondModelIcon, const SizedBox(width: 8), Text(secondModelName)]),
                 value: secondModel,
                 groupValue: selectedModel,
@@ -246,7 +268,7 @@ class _UserHomePageState extends State<UserHomePage> {
               ),
               const SizedBox(height: 10),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 78, 52, 46), foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4E342E), foregroundColor: Colors.white),
                 onPressed: () => Navigator.pop(context, selectedModel),
                 child: const Text('Continue'),
               ),
@@ -258,153 +280,126 @@ class _UserHomePageState extends State<UserHomePage> {
   }
 
   void _showRoboModelInfo() {
-  String selectedModel = 'gemini'; // default
+    String selectedModel = 'gemini';
 
-  showDialog(
-    context: context,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setState) => AlertDialog(
-        backgroundColor: const Color(0xFFFFF8F2),
-        title: const Text('🤖 RoboAI: Wanna know about the models?'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _radioOption('Gemini AI', 'gemini', selectedModel, (val) {
-              setState(() => selectedModel = val ?? 'gemini');
-            }),
-            _radioOption('T5 Base Model', 't5', selectedModel, (val) {
-              setState(() => selectedModel = val ?? 't5');
-            }),
-            _radioOption('T5 Small Model', 't5_small', selectedModel, (val) {
-              setState(() => selectedModel = val?? 't5_small');
-            }),
-            _radioOption('DistilBERT', 'distilbert', selectedModel, (val) {
-              setState(() => selectedModel = val?? 'distilbert');
-            }),
-            _radioOption('Tiny LLaMA', 'tiny_lama', selectedModel, (val) {
-              setState(() => selectedModel = val?? 'tiny_lama');
-            }),
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: const Color(0xFFFFF8F2),
+          title: const Text('🤖 RoboAI: Wanna know about the models?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _radioOption('Gemini AI', 'gemini', selectedModel, (val) => setState(() => selectedModel = val!)),
+              _radioOption('T5 Base Model', 't5', selectedModel, (val) => setState(() => selectedModel = val!)),
+              _radioOption('T5 Small Model', 't5_small', selectedModel, (val) => setState(() => selectedModel = val!)),
+              _radioOption('DistilBERT', 'distilbert', selectedModel, (val) => setState(() => selectedModel = val!)),
+              _radioOption('Tiny LLaMA', 'tiny_lama', selectedModel, (val) => setState(() => selectedModel = val!)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _showModelInfo(selectedModel);
+              },
+              child: const Text('Tell me more!'),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _radioOption(String title, String value, String selectedModel, void Function(String?) onChanged) {
+    return RadioListTile<String>(
+      title: Text(title),
+      value: value,
+      groupValue: selectedModel,
+      onChanged: onChanged,
+    );
+  }
+
+  void _showModelInfo(String model) {
+    String title;
+    String info;
+
+    switch (model) {
+      case 'gemini':
+        title = '🌟 Gemini 1.5 Flash';
+        info = '''
+- Developed by Google DeepMind.
+- Multimodal: Works with text, code, images, and more.
+- Extremely fast and optimized for real-time applications.
+- Large context window: Can understand long documents.
+- Ideal for summarization, Q&A, chatbots, and RAG tasks.
+''';
+        break;
+      case 't5':
+        title = '🧠 T5 Base Model';
+        info = '''
+- Developed by Google.
+- Text-to-Text architecture: Converts all NLP tasks to text form.
+- Good accuracy for summarization, classification, Q&A.
+- Pretrained on C4 dataset (Colossal Clean Crawled Corpus).
+- Offline & open-source compatible.
+''';
+        break;
+      case 't5_small':
+        title = '📄 T5 Small Model';
+        info = '''
+- Light version of T5 (~60M parameters).
+- Fast and efficient, good for small Q&A tasks.
+- Less accurate than base but resource-friendly.
+- Suitable for edge and mobile deployments.
+''';
+        break;
+      case 'distilbert':
+        title = '📘 DistilBERT';
+        info = '''
+- A smaller, faster version of BERT.
+- Retains 97% performance of BERT with 60% fewer parameters.
+- Well-suited for classification and sentiment analysis.
+- Very efficient and good for real-time prediction.
+''';
+        break;
+      case 'tiny_lama':
+        title = '🦙 Tiny LLaMA';
+        info = '''
+- A miniature version of Meta’s LLaMA model.
+- Finetuned for compliance, safety, and policy checks.
+- Lightweight: Suitable for deployment on smaller machines.
+- Strong at understanding structured documents.
+''';
+        break;
+      default:
+        title = 'Unknown Model';
+        info = 'No information available.';
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFFFF8F2),
+        title: Text(title),
+        content: SingleChildScrollView(child: Text(info)),
         actions: [
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: const Color.fromARGB(255, 97, 75, 53)),
+          TextButton.icon(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF4E342E)),
+            label: const Text('Back', style: TextStyle(color: Color(0xFF4E342E))),
             onPressed: () {
               Navigator.pop(context);
-              _showModelInfo(selectedModel); // uses updated model
+              _showRoboModelInfo();
             },
-            child: const Text('Tell me more!'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFF4E342E)),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cool!'),
           ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }
-  Widget _radioOption(
-        
-      String title,
-      String value,
-      String selectedModel,
-      void Function(String?) onChanged,
-    ) {
-      return RadioListTile<String>(
-        activeColor: const Color.fromARGB(255, 97, 75, 53),
-        title: Text(title),
-        value: value,
-        groupValue: selectedModel,
-        onChanged: onChanged, // passes nullable String
-      );
-    }
-      void _showModelInfo(String model) {
-      String title;
-      String info;
-
-          switch (model) {
-            case 'gemini':
-              title = '🌟 Gemini 1.5 Flash';
-              info = '''
-        - Developed by Google DeepMind.
-        - Multimodal: Works with text, code, images, and more.
-        - Extremely fast and optimized for real-time applications.
-        - Large context window: Can understand long documents.
-        - Ideal for summarization, Q&A, chatbots, and RAG tasks.
-        ''';
-              break;
-
-            case 't5':
-              title = '🧠 T5 Base Model';
-              info = '''
-        - Developed by Google.
-        - Text-to-Text architecture: Converts all NLP tasks to text form.
-        - Good accuracy for summarization, classification, Q&A.
-        - Pretrained on C4 dataset (Colossal Clean Crawled Corpus).
-        - Offline & open-source compatible.
-        ''';
-              break;
-
-            case 't5_small':
-              title = '📄 T5 Small Model';
-              info = '''
-        - Light version of T5 (~60M parameters).
-        - Fast and efficient, good for small Q&A tasks.
-        - Less accurate than base but resource-friendly.
-        - Suitable for edge and mobile deployments.
-        ''';
-              break;
-
-            case 'distilbert':
-              title = '📘 DistilBERT';
-              info = '''
-        - A smaller, faster version of BERT.
-        - Retains 97% performance of BERT with 60% fewer parameters.
-        - Well-suited for classification and sentiment analysis.
-        - Very efficient and good for real-time prediction.
-        ''';
-              break;
-
-            case 'tiny_lama':
-              title = '🦙 Tiny LLaMA';
-              info = '''
-        - A miniature version of Meta’s LLaMA model.
-        - Finetuned for compliance, safety, and policy checks.
-        - Lightweight: Suitable for deployment on smaller machines.
-        - Strong at understanding structured documents.
-        ''';
-              break;
-
-            default:
-              title = 'Unknown Model';
-              info = 'No information available.';
-          }
-
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFFFFF8F2),
-          title: Text(title),
-          content: SingleChildScrollView(child: Text(info)),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton.icon(
-                  icon: const Icon(Icons.arrow_back, color: Color.fromARGB(255, 97, 75, 53)),
-                  label: const Text('Back', style: TextStyle(color: Color.fromARGB(255, 97, 75, 53))),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showRoboModelInfo(); // reopen model selection
-                  },
-                ),
-                TextButton(
-                  style: TextButton.styleFrom(foregroundColor: const Color.fromARGB(255, 97, 75, 53)),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cool!'),
-                ),
-          ],
-        )
-      ],
-    ),
-  );
-}
-}
-

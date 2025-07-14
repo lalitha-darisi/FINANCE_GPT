@@ -76,7 +76,57 @@ class _HistoryPageState extends State<HistoryPage> with SingleTickerProviderStat
       backgroundColor: const Color(0xFFFFF8F0),
       appBar: AppBar(
         backgroundColor: const Color(0xFF4E342E),
-        title: const Text('Your History'),
+        title: const Text(
+          'Your History',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: PopupMenuButton<String>(
+              color: Colors.brown.shade50,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              icon: Row(
+                children: const [
+                  Icon(Icons.account_circle, size: 30, color: Color(0xFFEFEBE9)),
+                  Icon(Icons.arrow_drop_down, color: Color(0xFFEFEBE9)),
+                ],
+              ),
+              onSelected: (value) {
+                if (value == 'signout') {
+                  Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem<String>(
+                  value: 'username',
+                  enabled: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("👤 Logged in as:", style: TextStyle(color: Color(0xFF4E342E))),
+                      Text(
+                        widget.userId.split('@').first,
+                        style: const TextStyle(color: Color(0xFF4E342E), fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem<String>(
+                  value: 'signout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: Color(0xFF4E342E)),
+                      SizedBox(width: 8),
+                      Text('Sign Out', style: TextStyle(color: Color(0xFF4E342E))),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
