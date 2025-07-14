@@ -8,11 +8,9 @@ import json
 from pathlib import Path
 from typing import List, Union
 from datetime import datetime
-
 # ✅ Fix path so models/ and pipeline/ are importable
 backend_root = Path(__file__).resolve().parent.parent
 sys.path.append(str(backend_root))
-
 from sentence_transformers import SentenceTransformer
 from models.db import compliance_collection
 from pipeline.travel import TRAVEL_POLICIES

@@ -1,5 +1,3 @@
-# backend/usecases/qa.py
-# extract with gemini
 import os
 from io import BytesIO
 from pathlib import Path
@@ -7,19 +5,18 @@ from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from sentence_transformers import SentenceTransformer
 from transformers import T5ForConditionalGeneration, T5Tokenizer
-from datetime import datetime
 import torch
 import faiss
-
-from models.db import qa_collection  # ✅ MongoDB collection
+from datetime import datetime
+from models.db import qa_collection  # ✅ your friend's style
 
 # ─── Load .env ───
 env_path = Path(__file__).resolve().parents[1] / ".env"
 load_dotenv(dotenv_path=env_path)
 
-# ─── Load T5-small Model ───
-model = T5ForConditionalGeneration.from_pretrained("t5-small")
-tokenizer = T5Tokenizer.from_pretrained("t5-small")
+# ─── Load Fine-Tuned T5 QA Model ───
+model = T5ForConditionalGeneration.from_pretrained("valhalla/t5-small-qa-qg-hl")
+tokenizer = T5Tokenizer.from_pretrained("valhalla/t5-small-qa-qg-hl")
 
 # ─── Sentence Embedding Model ───
 embedder = SentenceTransformer("all-MiniLM-L6-v2")
@@ -48,14 +45,17 @@ def create_faiss_index(chunks):
 def retrieve_top_chunks(question: str, db, top_k=3):
     q_vec = embedder.encode([question])
     _, I = db["index"].search(q_vec, top_k)
-    return [db["chunks"][i] for i in I[0]]
+    return "\n".join([db["chunks"][i] for i in I[0]])
 
-# ─── T5-based Answer Generation ───
+# ─── T5 Answer Generation ───
 def ask_t5_with_context(question: str, context: str) -> str:
-    prompt = f"question: {question} context: {context}"
-    inputs = tokenizer(prompt, return_tensors="pt", truncation=True)
-    outputs = model.generate(inputs["input_ids"], max_length=256)
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+    try:
+        prompt = f"question: {question} context: {context}"
+        inputs = tokenizer(prompt, return_tensors="pt", truncation=True)
+        outputs = model.generate(inputs["input_ids"], max_length=256)
+        return tokenizer.decode(outputs[0], skip_special_tokens=True)
+    except Exception as e:
+        return f"❌ Error generating answer: {str(e)}"
 
 # ─── From PDF ───
 async def run_qa_pdf_t5(pdf_bytes: bytes, question: str, user_id: str = None) -> str:
@@ -64,9 +64,9 @@ async def run_qa_pdf_t5(pdf_bytes: bytes, question: str, user_id: str = None) ->
         chunks = chunk_text(text)
         db = create_faiss_index(chunks)
         top_chunks = retrieve_top_chunks(question, db)
-        context = "\n".join(top_chunks)
-        answer = ask_t5_with_context(question, context)
+        answer = ask_t5_with_context(question, top_chunks)
 
+        # ─── MongoDB Logging ───
         if user_id:
             await qa_collection.insert_one({
                 "user_id": user_id,
@@ -78,7 +78,6 @@ async def run_qa_pdf_t5(pdf_bytes: bytes, question: str, user_id: str = None) ->
             })
 
         return answer
-
     except Exception as e:
         return f"❌ Error during Q&A (PDF): {str(e)}"
 
@@ -88,9 +87,9 @@ async def run_qa_text_t5(text: str, question: str, user_id: str = None) -> str:
         chunks = chunk_text(text)
         db = create_faiss_index(chunks)
         top_chunks = retrieve_top_chunks(question, db)
-        context = "\n".join(top_chunks)
-        answer = ask_t5_with_context(question, context)
+        answer = ask_t5_with_context(question, top_chunks)
 
+        # ─── MongoDB Logging ───
         if user_id:
             await qa_collection.insert_one({
                 "user_id": user_id,
@@ -102,6 +101,5 @@ async def run_qa_text_t5(text: str, question: str, user_id: str = None) -> str:
             })
 
         return answer
-
     except Exception as e:
         return f"❌ Error during Q&A (Text): {str(e)}"
