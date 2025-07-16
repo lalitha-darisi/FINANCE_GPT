@@ -72,8 +72,9 @@ class _ClassificationPageState extends State<ClassificationPage> {
       multiPageResults = [];
     });
 
-    // final uri = Uri.parse("http://127.0.0.1:8000/classify");
-    final uri = Uri.parse("http://127.0.0.1:8000/classify");
+ 
+    //final uri = Uri.parse("http://127.0.0.1:8000/classify");
+    final uri = Uri.parse("$baseUrl/classify");
 
 
     try {
@@ -367,7 +368,13 @@ class _ClassificationPageState extends State<ClassificationPage> {
           Padding(
             padding: const EdgeInsets.only(top: 12),
             child: Center(
-              child: Lottie.asset('assets/loading2.json', width: 100),
+              child: Lottie.asset(
+  'assets/l2.json',
+  width: 200,
+  height: 200,
+  fit: BoxFit.contain,
+),
+
             ),
           ),
       ],

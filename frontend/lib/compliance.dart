@@ -232,8 +232,19 @@ class _ComplianceGeminiPageState extends State<ComplianceGeminiPage> {
                             const SizedBox(height: 20),
                             _buildGenerateButton(),
                             const SizedBox(height: 20),
-                            if (isLoading)
-                              Center(child: Lottie.asset('assets/loading2.json', width: 120)),
+                             if (isLoading)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Center(
+              child: Lottie.asset(
+  'assets/l2.json',
+  width: 200,
+  height: 200,
+  fit: BoxFit.contain,
+),
+
+            ),
+          ),
                             if (resultRaw.isNotEmpty || structuredResult.isNotEmpty)
                               _buildResultDisplay(),
                           ],

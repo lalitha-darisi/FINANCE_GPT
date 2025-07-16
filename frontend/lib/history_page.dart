@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'config.dart';
-
+import 'how_to_use_page.dart';
+import 'history_page.dart';
+import 'main.dart';
 class HistoryPage extends StatefulWidget {
   final String userId;
   const HistoryPage({super.key, required this.userId});
@@ -80,53 +82,72 @@ class _HistoryPageState extends State<HistoryPage> with SingleTickerProviderStat
           'Your History',
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: PopupMenuButton<String>(
-              color: Colors.brown.shade50,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              icon: Row(
-                children: const [
-                  Icon(Icons.account_circle, size: 30, color: Color(0xFFEFEBE9)),
-                  Icon(Icons.arrow_drop_down, color: Color(0xFFEFEBE9)),
-                ],
-              ),
-              onSelected: (value) {
-                if (value == 'signout') {
-                  Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem<String>(
-                  value: 'username',
-                  enabled: false,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text("👤 Logged in as:", style: TextStyle(color: Color(0xFF4E342E))),
-                      Text(
-                        widget.userId.split('@').first,
-                        style: const TextStyle(color: Color(0xFF4E342E), fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                const PopupMenuDivider(),
-                const PopupMenuItem<String>(
-                  value: 'signout',
-                  child: Row(
-                    children: [
-                      Icon(Icons.logout, color: Color(0xFF4E342E)),
-                      SizedBox(width: 8),
-                      Text('Sign Out', style: TextStyle(color: Color(0xFF4E342E))),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+      actions: [
+  Container(
+    margin: const EdgeInsets.only(right: 16),
+    width: 60, // ✅ Fixed width to prevent overlap
+    child: PopupMenuButton<String>(
+      offset: const Offset(0, 50),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.brown.shade50,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.account_circle, size: 30, color: Color(0xFFEFEBE9)),
+          Icon(Icons.arrow_drop_down, color: Color(0xFFEFEBE9)),
         ],
+      ),
+     onSelected: (value) {
+        if (value == 'history') {
+          Navigator.push(context, MaterialPageRoute(
+            builder: (context) => HistoryPage(userId: widget.userId),
+          ));
+        } else if (value == 'how_to_use') {
+          Navigator.push(context, MaterialPageRoute(
+            builder: (context) => const HowToUsePage(),
+          ));
+        } else if (value == 'logout') {
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem<String>(
+          value: 'history',
+          child: Row(
+            children: [
+              Icon(Icons.history, color: Color(0xFF4E342E)),
+              SizedBox(width: 8),
+              Text('View History', style: TextStyle(color: Color(0xFF4E342E))),
+            ],
+          ),
+        ),
+        const PopupMenuItem<String>(
+          value: 'how_to_use',
+          child: Row(
+            children: [
+              Icon(Icons.help_outline, color: Color(0xFF4E342E)),
+              SizedBox(width: 8),
+              Text('How to Use', style: TextStyle(color: Color(0xFF4E342E))),
+            ],
+          ),
+        ),
+        const PopupMenuItem<String>(
+          value: 'logout',
+          child: Row(
+            children: [
+              Icon(Icons.logout, color: Color(0xFF4E342E)),
+              SizedBox(width: 8),
+              Text('Sign Out', style: TextStyle(color: Color(0xFF4E342E))),
+            ],
+          ),
+        ),
+      ],
+    ),
+  ),
+],
+
+
+
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,

@@ -1,8 +1,8 @@
 # backend/usecases/comcheck.py
 import os
-import re
 import json
-import faiss
+import faiss  
+import re
 import fitz
 import torch
 import google.generativeai as genai

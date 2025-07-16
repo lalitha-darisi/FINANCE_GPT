@@ -163,7 +163,7 @@ async def classify(
         elif model == "gemini":
             if file:
                 contents = await file.read()
-                return classify_pdf_bytes(contents)
+                return await classify_pdf_bytes(contents)
             elif text:
                 label = classify_text_content(text)
                 return {

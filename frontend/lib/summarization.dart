@@ -84,7 +84,8 @@ class _SummarizationPageState extends State<SummarizationPage> {
         result = "";
       });
 
-      final uri = Uri.parse("http://127.0.0.1:8000/summarize");
+      //final uri = Uri.parse("http://127.0.0.1:8000/summarize");
+      final uri = Uri.parse("$baseUrl/summarize");
 
       try {
         http.Response response;
@@ -492,13 +493,19 @@ switch (useCase) {
         label: const Text("Generate Summary"),
         onPressed: sendToBackend,
       ),
-      if (isLoading)
-        Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: Center(
-            child: Lottie.asset('assets/loading2.json', width: 100),
+       if (isLoading)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Center(
+              child: Lottie.asset(
+  'assets/l2.json',
+  width: 200,
+  height: 200,
+  fit: BoxFit.contain,
+),
+
+            ),
           ),
-        ),
     ],
   );
 }

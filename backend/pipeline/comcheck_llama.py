@@ -8,9 +8,11 @@ import json
 from pathlib import Path
 from typing import List, Union
 from datetime import datetime
+
 # ✅ Fix path so models/ and pipeline/ are importable
 backend_root = Path(__file__).resolve().parent.parent
 sys.path.append(str(backend_root))
+
 from sentence_transformers import SentenceTransformer
 from models.db import compliance_collection
 from pipeline.travel import TRAVEL_POLICIES
@@ -60,16 +62,53 @@ def top_k_policies(claim: str, k=2) -> List[dict]:
     _, idx = INDEX.search(q_emb, k)
     return [TRAVEL_POLICIES[i] for i in idx[0]]
 
+def correct_conflicting_label(label: str, reasoning: str) -> str:
+    if "non-compliant" in reasoning.lower() and label == "Compliant":
+        return "Non-Compliant"
+    if "compliant" in reasoning.lower() and label == "Non-Compliant":
+        return "Compliant"
+    return label
+
+def parse_classification(result_text: str) -> tuple[str, str]:
+    match = re.search(r"classification\s*[:\-]*\s*(compliant|non-compliant)", result_text, re.IGNORECASE)
+    classification = match.group(1).capitalize() if match else "Unknown"
+    return classification, result_text
+
+
+
+def extract_reasoning(text: str) -> str:
+    match = re.search(r"reasoning[\s:\-–.]*([\s\S]+)", text, re.IGNORECASE)
+    if match:
+        reasoning = match.group(1).strip()
+        lines = [line.strip() for line in reasoning.splitlines() if line.strip()]
+        seen = set()
+        unique_lines = []
+        for line in lines:
+            if line not in seen:
+                seen.add(line)
+                unique_lines.append(line)
+        return " ".join(unique_lines)
+    return "No reasoning provided."
+
 # === Model inference ===
 def llama_classify(claim: str) -> str:
     prompt = (
-        "Determine if the following travel claim is compliant or non-compliant with travel policy rules. "
-        "Respond with 'Compliant' or 'Non-compliant' and provide reasoning.\n\n"
-        f"{claim}\n\n"
+        "You are a travel compliance expert. Review the claim and respond in the following format ONLY:\n\n"
+        "Classification: [Compliant / Non-Compliant]\n"
+        "Reasoning: <Concise explanation based strictly on travel policy>\n\n"
+        f"Claim: {claim}\n\n"
+        "Classification:"
     )
     inputs = tokenizer(prompt, return_tensors="pt").to(DEVICE)
-    outputs = model.generate(**inputs, max_new_tokens=200, do_sample=False)
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=150,
+        do_sample=False,
+        eos_token_id=tokenizer.eos_token_id,
+        pad_token_id=tokenizer.pad_token_id,
+    )
     return tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+
 
 # === Main compliance check function ===
 async def run_compliance_check_llama(content: Union[bytes, str], user_id: str, is_raw_text: bool = False):
@@ -85,8 +124,9 @@ async def run_compliance_check_llama(content: Union[bytes, str], user_id: str, i
             result_text = llama_classify(claim)
 
             # === Parse result ===
-            classification = "Compliant" if "compliant" in result_text.lower().split('.')[0] else "Non-Compliant"
-            reasoning = result_text.split('.', 1)[1].strip() if '.' in result_text else "No reasoning provided."
+            classification, reasoning_text = parse_classification(result_text)
+            reasoning = extract_reasoning(reasoning_text)
+            classification = correct_conflicting_label(classification, reasoning)
 
             result = {
                 "claim": claim,
@@ -104,7 +144,6 @@ async def run_compliance_check_llama(content: Union[bytes, str], user_id: str, i
                 "reasoning": result["reasoning"],
                 "matched_policies": result["matched_policies"]
             })
-
 
             results.append(result)
 

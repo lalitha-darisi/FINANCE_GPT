@@ -18,8 +18,7 @@ async def register_user(user: UserRegister):
     hashed = pwd_context.hash(user.password)
     await user_db.users.insert_one({
         "email": user.email,
-        "hashed_password": hashed,
-        "uploaded_claims": []
+        "hashed_password": hashed
     })
     return {"message": "User registered successfully"}
 

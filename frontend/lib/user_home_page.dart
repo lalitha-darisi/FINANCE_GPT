@@ -7,7 +7,8 @@ import 'classification.dart';
 import 'compliance.dart';
 import 'login_signup_page.dart';
 import 'history_page.dart';
-
+import 'how_to_use_page.dart'; // ✅ Added this line
+import 'main.dart';
 class UserHomePage extends StatefulWidget {
   final String userId;
   const UserHomePage({super.key, required this.userId});
@@ -56,10 +57,15 @@ class _UserHomePageState extends State<UserHomePage> {
                   Navigator.push(context, MaterialPageRoute(
                     builder: (context) => HistoryPage(userId: widget.userId),
                   ));
+                } else if (value == 'how_to_use') {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => const HowToUsePage(),
+                  ));
                 } else if (value == 'logout') {
-                  Navigator.pushReplacement(
+                  Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginSignUpPage()),
+                    MaterialPageRoute(builder: (context) => const FinanceApp()), // or MainPage() or LandingPage()
+                    (Route<dynamic> route) => false,
                   );
                 }
               },
@@ -83,6 +89,16 @@ class _UserHomePageState extends State<UserHomePage> {
                       Icon(Icons.history, color: Color(0xFF4E342E)),
                       SizedBox(width: 8),
                       Text('View History', style: TextStyle(color: Color(0xFF4E342E))),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'how_to_use',
+                  child: Row(
+                    children: [
+                      Icon(Icons.help_outline, color: Color(0xFF4E342E)),
+                      SizedBox(width: 8),
+                      Text('How to Use', style: TextStyle(color: Color(0xFF4E342E))),
                     ],
                   ),
                 ),
@@ -165,6 +181,10 @@ class _UserHomePageState extends State<UserHomePage> {
       ),
     );
   }
+
+  // Other methods remain unchanged below (not repeated for brevity)
+
+
 
   Widget _buildGlassBox(BuildContext context, IconData icon, String label, String description) {
     return ClipRRect(

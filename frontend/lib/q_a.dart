@@ -70,8 +70,8 @@ class _QAGeminiPageState extends State<QAGeminiPage> {
       chatHistory.add({'role': 'user', 'text': question});
       isLoading = true;
     });
-    final uri = Uri.parse("http://127.0.0.1:8000/qa_api");
     //final uri = Uri.parse("http://127.0.0.1:8000/qa_api");
+    final uri = Uri.parse("$baseUrl/qa_api");
     try {
       http.Response response;
       if (pdfFile != null) {
